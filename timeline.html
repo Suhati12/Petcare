@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Health Timeline — PetCare+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold text-dark mb-1"><i class="fa-solid fa-timeline text-success me-2"></i>Unified Health Timeline</h3>
+    <p class="text-muted mb-0">Chronological history combining vaccinations, medications, dewormings, grooming, and vet visits</p>
+  </div>
+</div>
+
+<!-- Timeline Filter Bar -->
+<div class="card border-0 shadow-sm rounded-3 mb-4">
+  <div class="card-body p-3">
+    <form action="{{ url_for('timeline.health_timeline') }}" method="GET" class="row g-2 align-items-center">
+      <div class="col-md-5">
+        <select name="pet_id" class="form-select form-select-sm">
+          <option value="">All Pets</option>
+          {% for pet in user_pets %}
+          <option value="{{ pet.id }}" {% if selected_pet==pet.id %}selected{% endif %}>{{ pet.name }} ({{ pet.species }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-5">
+        <select name="type" class="form-select form-select-sm">
+          <option value="">All Care Types</option>
+          {% for t in types %}
+          <option value="{{ t }}" {% if selected_type==t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 d-flex gap-1">
+        <button type="submit" class="btn btn-sm btn-success w-100"><i class="fa-solid fa-filter me-1"></i> Filter</button>
+        <a href="{{ url_for('timeline.health_timeline') }}" class="btn btn-sm btn-light border"><i class="fa-solid fa-rotate-left"></i></a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Interactive Vertical Timeline -->
+{% if items %}
+<div class="timeline-container ps-4">
+  {% for item in items %}
+  <div class="timeline-item">
+    <div class="timeline-marker bg-white text-{{ item.color }} border-{{ item.color }}">
+      <i class="fa-solid {{ item.icon }}"></i>
+    </div>
+    <div class="timeline-card">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <div>
+          <span class="badge bg-{{ item.color }} mb-1">{{ item.type }}</span>
+          <h5 class="fw-bold text-dark mb-0">{{ item.title }}</h5>
+          <small class="text-muted"><i class="fa-solid fa-paw me-1"></i>Pet: <strong>{{ item.pet_name }}</strong></small>
+        </div>
+        <div class="text-end">
+          <span class="badge {{ item.badge_class }} mb-1">{{ item.status }}</span>
+          <div class="fs-7 text-dark fw-bold"><i class="fa-regular fa-calendar me-1"></i>{{ item.date.strftime('%b %d, %Y') }}</div>
+        </div>
+      </div>
+      <p class="text-muted fs-7 mb-1">{{ item.details }}</p>
+      {% if item.notes %}
+      <div class="bg-light rounded p-2 fs-8 text-muted mt-2 border">
+        <i class="fa-solid fa-note-sticky me-1"></i> {{ item.notes }}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5 bg-white rounded-3 border shadow-sm">
+  <i class="fa-solid fa-timeline text-muted fs-1 mb-3 opacity-50"></i>
+  <h5 class="fw-bold text-dark">No timeline records found</h5>
+  <p class="text-muted mb-0 fs-7">Try adjusting your filters or record care activities for your pets.</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — PetCare+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold text-dark mb-1">Welcome back, {{ current_user.name }} 👋</h3>
+    <p class="text-muted mb-0">Here is your pet care overview and reminder summary for today</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('pets.add_pet') }}" class="btn btn-success shadow-sm fw-semibold">
+      <i class="fa-solid fa-plus me-1"></i> Add Pet
+    </a>
+    <a href="{{ url_for('vaccinations.add_vaccination') }}" class="btn btn-outline-success shadow-sm fw-semibold">
+      <i class="fa-solid fa-syringe me-1"></i> Record Vaccination
+    </a>
+  </div>
+</div>
+
+<!-- Stat Cards Grid -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-4 col-xl-2-4">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-muted fs-7 fw-medium">Total Pets</span>
+        <div class="stat-icon primary"><i class="fa-solid fa-dog"></i></div>
+      </div>
+      <h3 class="stat-number text-dark">{{ total_pets }}</h3>
+      <span class="fs-8 text-muted">Registered in care</span>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-4 col-xl-2-4">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-muted fs-7 fw-medium">Vaccines Due Soon</span>
+        <div class="stat-icon warning"><i class="fa-solid fa-syringe"></i></div>
+      </div>
+      <h3 class="stat-number text-warning">{{ vaccinations_due_soon }}</h3>
+      <span class="fs-8 text-muted">Within 7 days</span>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-4 col-xl-2-4">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-muted fs-7 fw-medium">Overdue Tasks</span>
+        <div class="stat-icon danger"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      </div>
+      <h3 class="stat-number text-danger">{{ overdue_count }}</h3>
+      <span class="fs-8 text-muted">Action required</span>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-4 col-xl-2-4">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-muted fs-7 fw-medium">Active Meds</span>
+        <div class="stat-icon info"><i class="fa-solid fa-pills"></i></div>
+      </div>
+      <h3 class="stat-number text-teal">{{ active_medications }}</h3>
+      <span class="fs-8 text-muted">Current schedules</span>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-4 col-xl-2-4">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-muted fs-7 fw-medium">Upcoming Visits</span>
+        <div class="stat-icon primary"><i class="fa-solid fa-user-md"></i></div>
+      </div>
+      <h3 class="stat-number text-dark">{{ upcoming_appointments }}</h3>
+      <span class="fs-8 text-muted">Vet consultations</span>
+    </div>
+  </div>
+</div>
+
+<!-- Overdue Banner Alert (If any) -->
+{% if overdue_reminders %}
+<div class="alert alert-danger shadow-sm border-danger border-start border-4 rounded-3 mb-4 p-3">
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <h6 class="fw-bold mb-1"><i class="fa-solid fa-bell-exclamation me-2"></i>Attention Required: {{ overdue_reminders|length }} Overdue Pet Care Task(s)</h6>
+      <p class="mb-0 fs-7">Some care schedules have passed their due dates. Please review and update records.</p>
+    </div>
+    <a href="{{ url_for('reminders.list_reminders', status='Overdue') }}" class="btn btn-sm btn-danger fw-semibold text-nowrap">View Overdue Tasks</a>
+  </div>
+</div>
+{% endif %}
+
+<!-- Charts Section -->
+<div class="row g-4 mb-4">
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm rounded-3 h-100">
+      <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-chart-pie me-2 text-success"></i>Care Tasks by Category</h6>
+        <span class="badge bg-light text-muted border">Live Distribution</span>
+      </div>
+      <div class="card-body p-3" style="min-height: 280px; position: relative;">
+        <canvas id="categoryChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm rounded-3 h-100">
+      <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-chart-column me-2 text-primary"></i>Completed vs Pending vs Overdue</h6>
+        <span class="badge bg-light text-muted border">Health Progress</span>
+      </div>
+      <div class="card-body p-3" style="min-height: 280px; position: relative;">
+        <canvas id="statusChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dashboard Lists Section (Today's Tasks & Upcoming Reminders) -->
+<div class="row g-4">
+  <!-- Today's Tasks -->
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm rounded-3 h-100">
+      <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-calendar-day me-2 text-warning"></i>Today's Tasks</h6>
+        <span class="badge bg-warning text-dark">{{ todays_tasks|length }} Due</span>
+      </div>
+      <div class="card-body p-0">
+        {% if todays_tasks %}
+        <ul class="list-group list-group-flush">
+          {% for r in todays_tasks %}
+          <li class="list-group-item p-3 d-flex justify-content-between align-items-center">
+            <div>
+              <span class="badge bg-warning text-dark me-2">{{ r.category }}</span>
+              <strong class="text-dark">{{ r.title }}</strong>
+              <div class="fs-7 text-muted mt-1"><i class="fa-solid fa-paw me-1"></i>Pet: <strong>{{ r.pet.name }}</strong></div>
+            </div>
+            <form action="{{ url_for('reminders.mark_completed', rem_id=r.id) }}" method="POST">
+              <button type="submit" class="btn btn-sm btn-outline-success">
+                <i class="fa-solid fa-check me-1"></i> Complete
+              </button>
+            </form>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-center py-5">
+          <i class="fa-solid fa-circle-check text-success fs-1 mb-2 opacity-50"></i>
+          <p class="text-muted mb-0 fs-7">No tasks due today! Your pets are up to date.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Upcoming Reminders -->
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm rounded-3 h-100">
+      <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-clock me-2 text-primary"></i>Upcoming Reminders</h6>
+        <a href="{{ url_for('reminders.list_reminders') }}" class="fs-7 text-success text-decoration-none fw-semibold">View All</a>
+      </div>
+      <div class="card-body p-0">
+        {% if upcoming_reminders %}
+        <ul class="list-group list-group-flush">
+          {% for r in upcoming_reminders %}
+          <li class="list-group-item p-3 d-flex justify-content-between align-items-center">
+            <div>
+              <div class="fw-semibold text-dark">{{ r.title }}</div>
+              <small class="text-muted"><i class="fa-solid fa-paw me-1"></i>{{ r.pet.name }} | Due: <strong>{{ r.due_date.strftime('%b %d, %Y') }}</strong></small>
+            </div>
+            <span class="badge {{ r.status_badge_class }}">{{ r.computed_status }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-center py-5">
+          <i class="fa-solid fa-calendar-check text-muted fs-1 mb-2 opacity-50"></i>
+          <p class="text-muted mb-0 fs-7">No upcoming reminders scheduled.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  window.categoryChartData = {{ category_chart_data | tojson }};
+  window.statusChartData = {{ status_chart_data | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Search Results — PetCare+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <h3 class="fw-bold text-dark mb-1"><i class="fa-solid fa-magnifying-glass text-success me-2"></i>Search Results</h3>
+  <p class="text-muted mb-0">Showing matching records for: <strong>"{{ query }}"</strong></p>
+</div>
+
+<!-- Pets Matches -->
+<div class="card border-0 shadow-sm rounded-3 mb-4">
+  <div class="card-header bg-white py-3 border-bottom">
+    <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-dog me-2 text-success"></i>Matching Pets ({{ pets|length }})</h6>
+  </div>
+  <div class="card-body">
+    {% if pets %}
+    <div class="row g-3">
+      {% for pet in pets %}
+      <div class="col-md-4">
+        <div class="border rounded p-3 d-flex align-items-center justify-content-between">
+          <div>
+            <h6 class="fw-bold mb-1">{{ pet.name }}</h6>
+            <small class="text-muted">{{ pet.species }} • {{ pet.breed or 'Mixed' }}</small>
+          </div>
+          <a href="{{ url_for('pets.view_pet', pet_id=pet.id) }}" class="btn btn-sm btn-outline-success">View</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted mb-0 fs-7">No pets matching your query.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Vaccinations Matches -->
+<div class="card border-0 shadow-sm rounded-3 mb-4">
+  <div class="card-header bg-white py-3 border-bottom">
+    <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-syringe me-2 text-primary"></i>Matching Vaccination Records ({{ vaccines|length }})</h6>
+  </div>
+  <div class="card-body">
+    {% if vaccines %}
+    <ul class="list-group list-group-flush">
+      {% for v in vaccines %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <strong>{{ v.vaccine_name }}</strong> (Pet: {{ v.pet.name }})
+          <div class="fs-7 text-muted">Administered: {{ v.date_administered }} | Next Due: {{ v.next_due_date }}</div>
+        </div>
+        <span class="badge {{ v.status_badge_class }}">{{ v.status }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-muted mb-0 fs-7">No vaccination records found matching query.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Medication Matches -->
+<div class="card border-0 shadow-sm rounded-3">
+  <div class="card-header bg-white py-3 border-bottom">
+    <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-pills me-2 text-warning"></i>Matching Medications ({{ medications|length }})</h6>
+  </div>
+  <div class="card-body">
+    {% if medications %}
+    <ul class="list-group list-group-flush">
+      {% for m in medications %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <strong>{{ m.medicine_name }}</strong> (Pet: {{ m.pet.name }})
+          <div class="fs-7 text-muted">Dosage: {{ m.dosage }} ({{ m.frequency }})</div>
+        </div>
+        <span class="badge {{ m.status_badge_class }}">{{ m.status }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-muted mb-0 fs-7">No medication schedules found matching query.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

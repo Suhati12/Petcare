@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Pet Health Reports — PetCare+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold text-dark mb-1"><i class="fa-solid fa-file-medical text-success me-2"></i>Medical Reports & Health Summaries</h3>
+    <p class="text-muted mb-0">Generate comprehensive pet health dossiers and export printable veterinary reports</p>
+  </div>
+  {% if selected_pet %}
+  <a href="{{ url_for('reports.print_health_report', pet_id=selected_pet.id) }}" target="_blank" class="btn btn-dark shadow-sm fw-semibold">
+    <i class="fa-solid fa-print me-1"></i> Print / Export Health Report
+  </a>
+  {% endif %}
+</div>
+
+<!-- Select Pet Bar -->
+<div class="card border-0 shadow-sm rounded-3 mb-4">
+  <div class="card-body p-3">
+    <form action="{{ url_for('reports.reports_index') }}" method="GET" class="row align-items-center">
+      <div class="col-md-9">
+        <select name="pet_id" class="form-select" onchange="this.form.submit()">
+          {% for pet in user_pets %}
+          <option value="{{ pet.id }}" {% if selected_pet and selected_pet.id==pet.id %}selected{% endif %}>
+            {{ pet.name }} ({{ pet.species }} — {{ pet.breed or 'Mixed' }})
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <button type="submit" class="btn btn-success w-100 fw-semibold">Load Health Summary</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if selected_pet %}
+<!-- Health Summary Dashboard Card -->
+<div class="card border-0 shadow-sm rounded-4 mb-4 p-4 bg-white">
+  <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+    <img src="{{ url_for('static', filename='uploads/pets/' + selected_pet.photo) }}" class="rounded-circle shadow" width="70" height="70" alt="{{ selected_pet.name }}">
+    <div>
+      <h4 class="fw-bold text-dark mb-0">{{ selected_pet.name }}</h4>
+      <span class="text-muted fs-7">{{ selected_pet.species }} • {{ selected_pet.breed }} • {{ selected_pet.age_display }} • {{ selected_pet.weight or 'N/A' }} kg</span>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Vaccinations Summary -->
+    <div class="col-md-6">
+      <div class="border rounded-3 p-3">
+        <h6 class="fw-bold text-success mb-2"><i class="fa-solid fa-syringe me-1"></i> Vaccination History ({{ vaccinations|length }})</h6>
+        {% if vaccinations %}
+        <ul class="list-group list-group-flush fs-7">
+          {% for v in vaccinations %}
+          <li class="list-group-item d-flex justify-content-between px-0">
+            <span><strong>{{ v.vaccine_name }}</strong> (Due: {{ v.next_due_date }})</span>
+            <span class="badge {{ v.status_badge_class }}">{{ v.status }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <small class="text-muted">No vaccinations recorded.</small>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Medications Summary -->
+    <div class="col-md-6">
+      <div class="border rounded-3 p-3">
+        <h6 class="fw-bold text-teal mb-2" style="color: #0d9488;"><i class="fa-solid fa-pills me-1"></i> Medications ({{ medications|length }})</h6>
+        {% if medications %}
+        <ul class="list-group list-group-flush fs-7">
+          {% for m in medications %}
+          <li class="list-group-item d-flex justify-content-between px-0">
+            <span><strong>{{ m.medicine_name }}</strong> ({{ m.dosage }})</span>
+            <span class="badge {{ m.status_badge_class }}">{{ m.status }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <small class="text-muted">No medications recorded.</small>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Vet Visits Summary -->
+    <div class="col-md-6">
+      <div class="border rounded-3 p-3">
+        <h6 class="fw-bold text-danger mb-2"><i class="fa-solid fa-user-md me-1"></i> Vet Consultations ({{ vet_visits|length }})</h6>
+        {% if vet_visits %}
+        <ul class="list-group list-group-flush fs-7">
+          {% for v in vet_visits %}
+          <li class="list-group-item px-0">
+            <strong>{{ v.reason }}</strong> — {{ v.visit_date }}
+            <div class="fs-8 text-muted">Diagnosis: {{ v.diagnosis or 'N/A' }}</div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <small class="text-muted">No vet visits recorded.</small>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Deworming & Grooming -->
+    <div class="col-md-6">
+      <div class="border rounded-3 p-3">
+        <h6 class="fw-bold text-warning-emphasis mb-2"><i class="fa-solid fa-shield-dog me-1"></i> Parasite & Grooming Log</h6>
+        <div class="fs-7 mb-2">
+          <strong>Deworming:</strong> {{ dewormings|length }} record(s)
+        </div>
+        <div class="fs-7">
+          <strong>Grooming:</strong> {{ groomings|length }} record(s)
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

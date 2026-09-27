@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Vet Visits — PetCare+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold text-dark mb-1"><i class="fa-solid fa-user-md text-danger me-2"></i>Veterinary Visits & Consultations</h3>
+    <p class="text-muted mb-0">Record clinical check-ups, prescriptions, diagnosis, and follow-up appointments</p>
+  </div>
+  <a href="{{ url_for('vet_visits.add_visit') }}" class="btn btn-danger shadow-sm fw-semibold">
+    <i class="fa-solid fa-plus me-1"></i> Record Vet Visit
+  </a>
+</div>
+
+<!-- Tabs for Upcoming vs Past -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+  <div class="card-header bg-white border-bottom pt-3 pb-0 px-4">
+    <ul class="nav nav-tabs card-header-tabs border-0">
+      <li class="nav-item">
+        <a class="nav-link {% if active_tab=='upcoming' %}active fw-bold text-primary{% else %}text-muted{% endif %}" href="{{ url_for('vet_visits.list_visits', tab='upcoming', pet_id=selected_pet) }}">
+          <i class="fa-regular fa-calendar-check me-1"></i> Upcoming Appointments
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if active_tab=='past' %}active fw-bold text-secondary{% else %}text-muted{% endif %}" href="{{ url_for('vet_visits.list_visits', tab='past', pet_id=selected_pet) }}">
+          <i class="fa-solid fa-clock-rotate-left me-1"></i> Medical History (Past Visits)
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="card-body p-0">
+    {% if visits %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light fs-7">
+          <tr>
+            <th class="ps-4">Pet</th>
+            <th>Reason for Visit</th>
+            <th>Date & Time</th>
+            <th>Veterinarian / Clinic</th>
+            <th>Diagnosis / Treatment</th>
+            <th>Prescription</th>
+            <th class="pe-4 text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in visits %}
+          <tr>
+            <td class="ps-4 fw-bold text-dark"><i class="fa-solid fa-paw me-1 text-danger"></i> {{ v.pet.name }}</td>
+            <td class="fw-bold text-dark">{{ v.reason }}</td>
+            <td>
+              <strong>{{ v.visit_date }}</strong>
+              {% if v.visit_time %}<small class="text-muted d-block fs-8"><i class="fa-regular fa-clock me-1"></i>{{ v.visit_time }}</small>{% endif %}
+            </td>
+            <td class="fs-7 text-muted">{{ v.vet_name or 'N/A' }} ({{ v.clinic or 'N/A' }})</td>
+            <td class="fs-7 text-muted">{{ v.diagnosis or 'Routine Examination' }}</td>
+            <td class="fs-7"><span class="badge bg-light text-dark border">{{ v.prescription or 'None' }}</span></td>
+            <td class="pe-4 text-end">
+              <div class="d-flex gap-1 justify-content-end">
+                <a href="{{ url_for('vet_visits.edit_visit', visit_id=v.id) }}" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-pen"></i></a>
+                <form action="{{ url_for('vet_visits.delete_visit', visit_id=v.id) }}" method="POST" onsubmit="return confirm('Delete visit record?');" class="d-inline">
+                  <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i></button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+      <i class="fa-solid fa-user-md text-muted fs-1 mb-3 opacity-50"></i>
+      <h5 class="fw-bold text-dark">No {{ active_tab }} vet visits</h5>
+      <p class="text-muted mb-3 fs-7">Record consultation notes and upcoming appointments.</p>
+      <a href="{{ url_for('vet_visits.add_visit') }}" class="btn btn-danger fw-semibold"><i class="fa-solid fa-plus me-1"></i> Record Visit</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

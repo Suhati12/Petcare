@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}PetCare+ — Smart Pet Vaccination & Care Reminder System{% endblock %}</title>
+  
+  <!-- Google Fonts & FontAwesome 6 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Custom PetCare+ Theme CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<div id="wrapper">
+  {% if current_user.is_authenticated %}
+  <!-- Sidebar Navigation -->
+  <nav id="sidebar">
+    <div class="sidebar-header d-flex align-items-center justify-content-between">
+      <h3><i class="fa-solid fa-paw me-2"></i>PetCare+</h3>
+    </div>
+
+    <ul class="list-unstyled components">
+      <li class="{% if request.endpoint == 'main.dashboard' %}active{% endif %}">
+        <a href="{{ url_for('main.dashboard') }}"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+      </li>
+      <li class="{% if request.endpoint and 'pets.' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('pets.list_pets') }}"><i class="fa-solid fa-dog"></i> My Pets</a>
+      </li>
+      <li class="{% if request.endpoint and 'vaccinations.' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('vaccinations.list_vaccinations') }}"><i class="fa-solid fa-syringe"></i> Vaccinations</a>
+      </li>
+      <li class="{% if request.endpoint and 'medications.' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('medications.list_medications') }}"><i class="fa-solid fa-pills"></i> Medications</a>
+      </li>
+      <li class="{% if request.endpoint and 'dewormings.' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('dewormings.list_dewormings') }}"><i class="fa-solid fa-bug-slash"></i> Deworming</a>
+      </li>
+      <li class="{% if request.endpoint and 'groomings.' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('groomings.list_groomings') }}"><i class="fa-solid fa-scissors"></i> Grooming</a>
+      </li>
+      <li class="{% if request.endpoint and 'vet_visits.' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('vet_visits.list_visits') }}"><i class="fa-solid fa-user-md"></i> Vet Visits</a>
+      </li>
+      <li class="{% if request.endpoint and 'reminders.' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('reminders.list_reminders') }}"><i class="fa-solid fa-bell"></i> Reminders</a>
+      </li>
+      <li class="{% if request.endpoint and 'notifications.' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('notifications.list_notifications') }}">
+          <i class="fa-solid fa-envelope-open-text"></i> Notifications
+          {% if unread_notifications_count > 0 %}
+          <span class="badge bg-danger rounded-pill ms-auto" id="nav-unread-badge">{{ unread_notifications_count }}</span>
+          {% else %}
+          <span class="badge bg-danger rounded-pill ms-auto d-none" id="nav-unread-badge">0</span>
+          {% endif %}
+        </a>
+      </li>
+      <li class="{% if request.endpoint and 'timeline.' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('timeline.health_timeline') }}"><i class="fa-solid fa-timeline"></i> Health Timeline</a>
+      </li>
+      <li class="{% if request.endpoint and 'reports.' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('reports.reports_index') }}"><i class="fa-solid fa-file-medical"></i> Health Reports</a>
+      </li>
+      <li class="{% if request.endpoint == 'auth.profile' %}active{% endif %}">
+        <a href="{{ url_for('auth.profile') }}"><i class="fa-solid fa-user-gear"></i> Profile Settings</a>
+      </li>
+    </ul>
+
+    <div class="px-4 py-3 border-top border-secondary mt-auto">
+      <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm w-100"><i class="fa-solid fa-right-from-bracket me-2"></i> Logout</a>
+    </div>
+  </nav>
+  {% endif %}
+
+  <!-- Main Content Wrapper -->
+  <div id="content">
+    {% if current_user.is_authenticated %}
+    <!-- Top Navbar -->
+    <nav class="navbar navbar-expand-lg main-navbar">
+      <div class="container-fluid">
+        <button type="button" id="sidebarCollapse" class="btn btn-light border">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <form class="d-none d-md-flex search-bar ms-3 flex-grow-1 max-w-400" action="{{ url_for('main.search') }}" method="GET">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input class="form-control form-control-sm" type="search" name="q" placeholder="Search pets, vaccines, medications..." value="{{ request.args.get('q', '') }}">
+        </form>
+
+        <div class="ms-auto d-flex align-items-center gap-3">
+          <!-- Live Manual Trigger Engine Button -->
+          <form action="{{ url_for('reminders.trigger_check') }}" method="POST" class="d-inline">
+            <button type="submit" class="btn btn-sm btn-outline-success" data-bs-toggle="tooltip" title="Run Smart Reminder Engine Now (Live Demo)">
+              <i class="fa-solid fa-arrows-rotate me-1"></i> Sync Engine
+            </button>
+          </form>
+
+          <!-- Notifications Bell Icon -->
+          <a href="{{ url_for('notifications.list_notifications') }}" class="position-relative text-dark fs-5">
+            <i class="fa-regular fa-bell"></i>
+            {% if unread_notifications_count > 0 %}
+            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+              <span class="visually-hidden">New notifications</span>
+            </span>
+            {% endif %}
+          </a>
+
+          <!-- User Menu Dropdown -->
+          <div class="dropdown">
+            <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark fw-medium fs-7" id="dropdownUser" data-bs-toggle="dropdown">
+              <img src="https://ui-avatars.com/api/?name={{ current_user.name }}&background=10b981&color=fff" width="32" height="32" class="rounded-circle me-2" alt="Avatar">
+              <span>{{ current_user.name }}</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end text-small shadow border-0" aria-labelledby="dropdownUser">
+              <li><a class="dropdown-menu-item dropdown-item" href="{{ url_for('auth.profile') }}"><i class="fa-solid fa-user me-2 text-muted"></i> Profile</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-menu-item dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i class="fa-solid fa-right-from-bracket me-2"></i> Logout</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </nav>
+    {% endif %}
+
+    <!-- Page Body Content -->
+    <div class="container-fluid p-4">
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+              <i class="fa-solid {% if category=='success' %}fa-circle-check{% elif category=='danger' %}fa-circle-exclamation{% else %}fa-circle-info{% endif %} me-2"></i>
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </div>
+
+    <!-- App Footer -->
+    <footer class="mt-auto py-3 bg-white border-top text-center text-muted small">
+      <div class="container">
+        <span>PetCare+ Smart Pet Vaccination & Care Reminder System &copy; 2026 — Designed for Final-Year MCA Project</span>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<!-- Bootstrap 5 JS Bundle & Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

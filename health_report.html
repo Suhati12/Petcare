@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Official Pet Health Summary — {{ pet.name }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background: #fff; font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; }
+    .report-card { border: 2px solid #e2e8f0; padding: 40px; border-radius: 12px; }
+    @media print {
+      .btn-print { display: none !important; }
+      body { padding: 0; }
+    }
+  </style>
+</head>
+<body class="p-4">
+
+<div class="container max-w-900">
+  <div class="d-flex justify-content-between align-items-center mb-4 btn-print">
+    <a href="{{ url_for('reports.reports_index') }}" class="btn btn-outline-secondary"><i class="fa-solid fa-arrow-left me-1"></i> Back to App</a>
+    <button onclick="window.print()" class="btn btn-success fw-semibold"><i class="fa-solid fa-print me-1"></i> Print / Save as PDF</button>
+  </div>
+
+  <div class="report-card">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center border-bottom pb-4 mb-4">
+      <div>
+        <h2 class="fw-bold text-success mb-1"><i class="fa-solid fa-paw me-2"></i>PetCare+ Health Dossier</h2>
+        <p class="text-muted mb-0">Official Veterinary Medical Summary Report</p>
+      </div>
+      <div class="text-end">
+        <div class="fw-bold fs-6">Date Generated:</div>
+        <div class="text-muted fs-7">{{ owner.created_at.strftime('%Y-%m-%d') }}</div>
+      </div>
+    </div>
+
+    <!-- Pet Details Grid -->
+    <div class="row bg-light rounded-3 p-3 mb-4 g-3 border">
+      <div class="col-md-6">
+        <h4 class="fw-bold mb-1">{{ pet.name }}</h4>
+        <div><strong>Species:</strong> {{ pet.species }} ({{ pet.breed or 'Mixed' }})</div>
+        <div><strong>Gender:</strong> {{ pet.gender }} | <strong>Age:</strong> {{ pet.age_display }}</div>
+        <div><strong>Weight:</strong> {{ pet.weight or 'N/A' }} kg | <strong>Color:</strong> {{ pet.color or 'N/A' }}</div>
+        <div><strong>Microchip ID:</strong> <code>{{ pet.microchip_id or 'None' }}</code></div>
+      </div>
+      <div class="col-md-6 border-start">
+        <h6 class="fw-bold mb-1">Owner Contact Details:</h6>
+        <div><strong>Owner Name:</strong> {{ owner.name }}</div>
+        <div><strong>Email:</strong> {{ owner.email }}</div>
+        <div><strong>Phone:</strong> {{ owner.phone or 'N/A' }}</div>
+      </div>
+    </div>
+
+    <!-- Allergies & Medical Warnings -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-6">
+        <div class="border rounded p-3 bg-light">
+          <strong class="text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i> Allergies:</strong>
+          <p class="mb-0 fs-7">{{ pet.allergies or 'None reported' }}</p>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="border rounded p-3 bg-light">
+          <strong class="text-warning-emphasis"><i class="fa-solid fa-notes-medical me-1"></i> Chronic Medical Conditions:</strong>
+          <p class="mb-0 fs-7">{{ pet.medical_conditions or 'None reported' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vaccinations Table -->
+    <h5 class="fw-bold border-bottom pb-2 mb-3"><i class="fa-solid fa-syringe text-success me-2"></i>Vaccination History</h5>
+    {% if vaccinations %}
+    <table class="table table-bordered table-sm fs-7 mb-4">
+      <thead class="table-light">
+        <tr>
+          <th>Vaccine Name</th>
+          <th>Type</th>
+          <th>Date Administered</th>
+          <th>Next Due Date</th>
+          <th>Status</th>
+          <th>Veterinarian</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in vaccinations %}
+        <tr>
+          <td>{{ v.vaccine_name }}</td>
+          <td>{{ v.vaccine_type or 'Core' }}</td>
+          <td>{{ v.date_administered }}</td>
+          <td>{{ v.next_due_date }}</td>
+          <td>{{ v.status }}</td>
+          <td>{{ v.veterinarian or 'N/A' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted fs-7 mb-4">No vaccination records.</p>
+    {% endif %}
+
+    <!-- Medications Table -->
+    <h5 class="fw-bold border-bottom pb-2 mb-3"><i class="fa-solid fa-pills text-primary me-2"></i>Medication History</h5>
+    {% if medications %}
+    <table class="table table-bordered table-sm fs-7 mb-4">
+      <thead class="table-light">
+        <tr>
+          <th>Medicine</th>
+          <th>Dosage</th>
+          <th>Frequency</th>
+          <th>Dates</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in medications %}
+        <tr>
+          <td>{{ m.medicine_name }}</td>
+          <td>{{ m.dosage }}</td>
+          <td>{{ m.frequency }}</td>
+          <td>{{ m.start_date }} to {{ m.end_date }}</td>
+          <td>{{ m.status }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted fs-7 mb-4">No medication records.</p>
+    {% endif %}
+
+    <!-- Vet Visits Table -->
+    <h5 class="fw-bold border-bottom pb-2 mb-3"><i class="fa-solid fa-user-md text-danger me-2"></i>Veterinary Consultations</h5>
+    {% if vet_visits %}
+    <table class="table table-bordered table-sm fs-7 mb-4">
+      <thead class="table-light">
+        <tr>
+          <th>Reason</th>
+          <th>Date</th>
+          <th>Clinic / Vet</th>
+          <th>Diagnosis / Treatment</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for vv in vet_visits %}
+        <tr>
+          <td>{{ vv.reason }}</td>
+          <td>{{ vv.visit_date }}</td>
+          <td>{{ vv.vet_name or 'N/A' }} ({{ vv.clinic or 'N/A' }})</td>
+          <td>{{ vv.diagnosis or 'N/A' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted fs-7 mb-4">No vet visits recorded.</p>
+    {% endif %}
+
+    <div class="text-center pt-4 border-top text-muted fs-8">
+      PetCare+ Smart Pet Vaccination & Care Reminder System — Verified Official Report
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
