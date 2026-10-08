@@ -7,6 +7,7 @@
 
 **PetCare+** is a professional, full-featured web application designed to help pet owners manage pet care schedules, vaccinations, deworming, medication, grooming, and veterinary check-ups. Built with Python Flask, Flask-SQLAlchemy, Flask-Login, APScheduler, MySQL/SQLite, Bootstrap 5, and Chart.js, it serves as an exemplary showcase final-year **MCA Academic Project**.
 
+
 ---
 
 ## 🌟 Key Features
